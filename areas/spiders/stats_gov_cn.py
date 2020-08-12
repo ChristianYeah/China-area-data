@@ -9,22 +9,25 @@ class StatsGovCnSpider(scrapy.Spider):
     ]
     next_area_type = {'province': 'city', 'city': 'county', 'county': 'town', 'town': 'village'}
     custom_settings = {
-        'FEED_EXPORT_ENCODING': 'utf-8'
+        'FEED_EXPORT_ENCODING': 'utf-8',
+        'RETRY_TIMES': 9999999999,
+        'LOG_LEVEL': 'INFO',
+        'CONCURRENT_REQUESTS': 128
     }
 
     def start_request(self):
         for url in self.start_urls:
             yield scrapy.Request(
-                url, callback=self.parse
+                url, callback=self.parse, dont_filter=True
             )
 
     def parse(self, response):
         area_type = response.meta.get("next_area_type", 'province')
         for code, name, link in self.__parser(area_type, response):
-            data = response.meta.get('data', {})
+            data = response.meta.get('data', {}).copy()
             if area_type != 'village':
                 data.update({"%s_code" % area_type: code, "%s_name" % area_type: name})
-                yield scrapy.Request(link, callback=self.parse, meta={
+                yield scrapy.Request(link, callback=self.parse, dont_filter=True, meta={
                     "next_area_type": self.next_area_type.get(area_type, None), "data": data
                 })
             else:
