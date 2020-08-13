@@ -12,7 +12,6 @@ class StatsGovCnSpider(scrapy.Spider):
         'FEED_EXPORT_ENCODING': 'utf-8',
         'RETRY_TIMES': 9999999999,
         'LOG_LEVEL': 'INFO',
-        'CONCURRENT_REQUESTS': 128
     }
 
     def start_request(self):
@@ -41,11 +40,17 @@ class StatsGovCnSpider(scrapy.Spider):
             return [(
                 a.xpath("@href").get().replace(".html", ""),
                 a.xpath("text()").get(),
-                response.urljoin(a.xpath("@href").get())
+                response.urljoin(a.xpath("@href").get()),
             ) for a in response.xpath(xpath + "/td/a")]
         elif area_type == 'village':
-            return [(tr.xpath("td[1]/text()").get(), tr.xpath("td[2]/text()").get(), tr.xpath("td[3]/text()").get(),
-                     ) for tr in response.xpath(xpath)]
+            return [(
+                tr.xpath("td[1]/text()").get(),
+                tr.xpath("td[2]/text()").get(),
+                tr.xpath("td[3]/text()").get(),
+            ) for tr in response.xpath(xpath)]
         else:
-            return [(tr.xpath("td[1]/a/text()").get(), tr.xpath("td[2]/a/text()").get(),
-                     response.urljoin(tr.xpath("td[2]/a/@href").get()),) for tr in response.xpath(xpath)]
+            return [(
+                tr.xpath("td[1]/a/text()").get(),
+                tr.xpath("td[2]/a/text()").get(),
+                response.urljoin(tr.xpath("td[2]/a/@href").get()),
+            ) for tr in response.xpath(xpath)]
